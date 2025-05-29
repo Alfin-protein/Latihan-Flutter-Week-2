@@ -27,6 +27,12 @@ class _CounterAppState extends State<CounterApp> {
     });
   }
 
+  void decrementCounter() {
+    setState(() {
+      if (counter > 0) counter--;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,6 +52,15 @@ class _CounterAppState extends State<CounterApp> {
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: decrementCounter,
+              child: Text('Kurang'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+            ),
             ElevatedButton(
               onPressed: incrementCounter,
               child: Text('Tambah'),
