@@ -5,70 +5,123 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: CounterApp(),
+      home: CalculatorApp(),
     );
   }
 }
 
-class CounterApp extends StatefulWidget {
+class CalculatorApp extends StatefulWidget {
+  const CalculatorApp({super.key});
+
   @override
-  _CounterAppState createState() => _CounterAppState();
+  _CalculatorAppState createState() => _CalculatorAppState();
 }
 
-class _CounterAppState extends State<CounterApp> {
-  int counter = 0;
+class _CalculatorAppState extends State<CalculatorApp> {
+  final TextEditingController _number1Controller = TextEditingController();
+  final TextEditingController _number2Controller = TextEditingController();
+  double _result = 0;
 
-  void incrementCounter() {
+  void calculate(String operation) {
+    double num1 = double.tryParse(_number1Controller.text) ?? 0;
+    double num2 = double.tryParse(_number2Controller.text) ?? 0;
+
     setState(() {
-      counter++;
+      if (operation == '+') {
+        _result = num1 + num2;
+      } else if (operation == '-') {
+        _result = num1 - num2;
+      } else if (operation == '*') {
+        _result = num1 * num2;
+      } else if (operation == '/') {
+        if (num2 != 0) {
+          _result = num1 / num2;
+        } else {
+          _result = 0;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Pembagian dengan nol tidak diperbolehkan!')),
+          );
+        }
+      }
     });
   }
 
-  void decrementCounter() {
-    setState(() {
-      if (counter > 0) counter--;
-    });
-  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext Context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hari 3: Counter Interaktif'),
+        title: Text("Kalkulator Sederhana"),
       ),
-      body: Center(
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Tombol sudah ditekan:',
-              style: TextStyle(fontSize: 24),
+            TextField(
+              controller: _number1Controller,
+              decoration: InputDecoration(
+                  labelText: 'Angka Pertama',
+                  contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0)
+              ),
+              keyboardType: TextInputType.number,
             ),
-            Text(
-              '$counter kali',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            SizedBox(height: 10),
+            TextField(
+                controller: _number2Controller,
+                decoration: InputDecoration(
+                    labelText: 'Angka Kedua',
+                    contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0)
+                ),
+                keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: decrementCounter,
-              child: Text('Kurang'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => calculate('+'),
+                    child: Text('+'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => calculate('-'),
+                    child: Text('-'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => calculate('*'),
+                    child: Text('x'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => calculate('/'),
+                    child: Text(':'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
             ),
-            ElevatedButton(
-              onPressed: incrementCounter,
-              child: Text('Tambah'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
+            SizedBox(height: 20),
+            Text(
+              'Hasil: $_result',
+              style: TextStyle(fontSize: 24),
             ),
           ],
         ),
