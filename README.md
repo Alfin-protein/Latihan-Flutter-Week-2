@@ -16,3 +16,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Progres Minggu 2
+- Belajar Flutter: Instalasi, widget dasar, interaksi, dan proyek kalkulator UI.
+- Pencapaian: Membuat kalkulator sederhana dengan fitur riwayat dan tombol Clear.

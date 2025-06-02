@@ -27,6 +27,7 @@ class _CalculatorAppState extends State<CalculatorApp> {
   final TextEditingController _number2Controller = TextEditingController();
   double _result = 0;
 
+  List<String> _history = [];
   void calculate(String operation) {
     double num1 = double.tryParse(_number1Controller.text) ?? 0;
     double num2 = double.tryParse(_number2Controller.text) ?? 0;
@@ -48,21 +49,66 @@ class _CalculatorAppState extends State<CalculatorApp> {
           );
         }
       }
+      _history.add('$num1 $operation $num2'
+          '= $_result');
+      if (_history.length > 5) _history.removeAt(0);
     });
   }
 
+  void clear() {
+    setState(() {
+      _number1Controller.clear();
+      _number2Controller.clear();
+      _result= 0;
+    });
+  }
+
+  void clearAll() {
+    setState(() {
+      _number1Controller.clear();
+      _number2Controller.clear();
+      _result= 0;
+      _history.clear();
+    });
+  }
 
   @override
   Widget build(BuildContext Context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Kalkulator Sederhana"),
+        backgroundColor: Colors.white24,
       ),
+      backgroundColor: Colors.white70,
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            _history.isNotEmpty
+                ? Expanded(
+              child: ListView.builder(
+                reverse: true,
+                itemCount: _history.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      _history[index],
+                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                    ),
+                  );
+                },
+              ),
+            )
+                : SizedBox(),
+            SizedBox(height: 20),
+            _result !=0
+            ? Text(
+              '= $_result'
+            )
+            : SizedBox(),
             TextField(
               controller: _number1Controller,
               decoration: InputDecoration(
@@ -116,12 +162,23 @@ class _CalculatorAppState extends State<CalculatorApp> {
                       foregroundColor: Colors.white,
                     ),
                   ),
+                  ElevatedButton(
+                    onPressed: clear,
+                    child: Text('Clear'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: clearAll,
+                    child: Text('Clear All'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pink,
+                      foregroundColor: Colors.white,
+                    )
+                  )
                 ],
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Hasil: $_result',
-              style: TextStyle(fontSize: 24),
             ),
           ],
         ),
