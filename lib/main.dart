@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
   runApp(MyApp());
@@ -26,13 +27,22 @@ class _CalculatorAppState extends State<CalculatorApp> {
   final TextEditingController _number1Controller = TextEditingController();
   final TextEditingController _number2Controller = TextEditingController();
   double _result = 0;
-
   List<String> _history = [];
+  String _status = '';
+  double _lastNum1 = 0;
+  double _lastNum2 = 0;
+  double _lastResult = 0;
+
   void calculate(String operation) {
     double num1 = double.tryParse(_number1Controller.text) ?? 0;
     double num2 = double.tryParse(_number2Controller.text) ?? 0;
 
     setState(() {
+      _lastNum1 = num1;
+      _lastNum2 = num2;
+      _lastResult = _result;
+
+      _status = '';
       if (operation == '+') {
         _result = num1 + num2;
       } else if (operation == '-') {
@@ -44,14 +54,31 @@ class _CalculatorAppState extends State<CalculatorApp> {
           _result = num1 / num2;
         } else {
           _result = 0;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pembagian dengan nol tidak diperbolehkan!')),
-          );
+          _status = 'Pembagian dengan nol tidak diperbolehkan!';
         }
+      } else if (operation == '%') {
+        _result = num1 % num2;
+      } else if (operation == '^') {
+        _result = pow(num1, num2).toDouble();
       }
-      _history.add('$num1 $operation $num2'
-          '= $_result');
-      if (_history.length > 5) _history.removeAt(0);
+      if (_status == '') {
+        _history.add('$num1 $operation $num2 = $_result');
+        if (_history.length > 5) _history.removeAt(0);
+      }
+    });
+  }
+
+  void undo() {
+    setState(() {
+      if (_history.isNotEmpty) {
+        _history.removeLast();
+        _number1Controller.text = _lastNum1.toString();
+        _number2Controller.text = _lastNum2.toString();
+        _result = _lastResult;
+        _status = 'Operasi Terakhir Dibatalkan';
+      } else {
+        _status = 'Tidak ada operasi untuk di batalkan';
+      }
     });
   }
 
@@ -60,6 +87,7 @@ class _CalculatorAppState extends State<CalculatorApp> {
       _number1Controller.clear();
       _number2Controller.clear();
       _result= 0;
+      _status = '';
     });
   }
 
@@ -69,6 +97,7 @@ class _CalculatorAppState extends State<CalculatorApp> {
       _number2Controller.clear();
       _result= 0;
       _history.clear();
+      _status = '';
     });
   }
 
@@ -77,32 +106,21 @@ class _CalculatorAppState extends State<CalculatorApp> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Kalkulator Sederhana"),
-        backgroundColor: Colors.white24,
+        backgroundColor: Colors.tealAccent,
       ),
-      backgroundColor: Colors.white70,
+      backgroundColor: Colors.cyan,
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             _history.isNotEmpty
-                ? Expanded(
-              child: ListView.builder(
-                reverse: true,
-                itemCount: _history.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      _history[index],
-                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                    ),
-                  );
-                },
-              ),
+            ? Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: _history.map((item) => Text(item)).toList(),
             )
-                : SizedBox(),
+            : SizedBox(),
             SizedBox(height: 20),
             _result !=0
             ? Text(
@@ -162,24 +180,53 @@ class _CalculatorAppState extends State<CalculatorApp> {
                       foregroundColor: Colors.white,
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: clear,
-                    child: Text('Clear'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    ),
+                ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () => calculate('%'),
+                  child: Text('%'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellow,
+                    foregroundColor: Colors.white,
                   ),
-                  ElevatedButton(
+                ),
+                ElevatedButton(
+                  onPressed: () => calculate('^'),
+                  child: Text('^'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.brown,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: undo,
+                  child: Text('Undo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: clear,
+                  child: Text('Clear'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton(
                     onPressed: clearAll,
-                    child: Text('Clear All'),
+                    child: Text('ClearAll'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.pink,
                       foregroundColor: Colors.white,
                     )
-                  )
-                ],
-            ),
+                )
+              ],
+            )
           ],
         ),
       ),
