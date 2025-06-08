@@ -33,6 +33,38 @@ class _CalculatorAppState extends State<CalculatorApp> {
   double _lastNum2 = 0;
   double _lastResult = 0;
 
+  bool validateInputs(String operation) {
+    if (_number1Controller.text.isEmpty) {
+      setState(() {
+        _status = 'Angka pertama tidak boleh kosong!';
+      });
+      return false;
+    }
+    double? num1 = double.tryParse(_number1Controller.text);
+    if (num1 == null) {
+      setState(() {
+        _status = 'Angka pertama harus berupa angka valid!';
+      });
+      return false;
+    }
+
+    if (['+','-','*','/','%','^','% of'].contains(operation)) {
+      if (_number2Controller.text.isEmpty) {
+        setState(() {
+          _status = 'Angka kedua tidak boleh kosong!';
+        });
+        return false;
+      }
+      double? num2 = double.tryParse(_number2Controller.text);
+      if (num2 == null) {
+        setState(() {
+          _status = 'Angka kedua harus berupa angka valid';
+        });
+      }
+    }
+    return true;
+  }
+
   void calculate(String operation) {
     double num1 = double.tryParse(_number1Controller.text) ?? 0;
     double num2 = double.tryParse(_number2Controller.text) ?? 0;
@@ -41,29 +73,43 @@ class _CalculatorAppState extends State<CalculatorApp> {
       _lastNum1 = num1;
       _lastNum2 = num2;
       _lastResult = _result;
-
       _status = '';
-      if (operation == '+') {
-        _result = num1 + num2;
-      } else if (operation == '-') {
-        _result = num1 - num2;
-      } else if (operation == '*') {
-        _result = num1 * num2;
-      } else if (operation == '/') {
-        if (num2 != 0) {
-          _result = num1 / num2;
-        } else {
-          _result = 0;
-          _status = 'Pembagian dengan nol tidak diperbolehkan!';
+      if (['+','-','*','/','%','^','% of'].contains(operation)) {
+        if (operation == '+') {
+          _result = num1 + num2;
+        } else if (operation == '-') {
+          _result = num1 - num2;
+        } else if (operation == '*') {
+          _result = num1 * num2;
+        } else if (operation == '/') {
+          if (num2 != 0) {
+            _result = num1 / num2;
+          } else {
+            _result = 0;
+            _status = 'Pembagian dengan nol tidak diperbolehkan!';
+          }
+        } else if (operation == '%') {
+          _result = num1 % num2;
+        } else if (operation == '^') {
+          _result = pow(num1, num2).toDouble();
+        } else if (operation == '% of') {
+          _result = (num1 / num2) * 100;
         }
-      } else if (operation == '%') {
-        _result = num1 % num2;
-      } else if (operation == '^') {
-        _result = pow(num1, num2).toDouble();
+        if (_status == '') {
+          _history.add('$num1 $operation $num2 = ${_result.toStringAsFixed(operation == '% of' ? 2 : 4)}${operation == '% of' ? '%' : ''}');
+          if (_history.length > 5) _history.removeAt(0);
+        }
       }
-      if (_status == '') {
-        _history.add('$num1 $operation $num2 = $_result');
-        if (_history.length > 5) _history.removeAt(0);
+      if (['sin','cos','tan'].contains(operation)) {
+        double radian = num1 * (2 * pi / 360);
+        if (operation == 'sin') {
+          _result = sin(radian);
+        } else if (operation == 'cos') {
+          _result = cos(radian);
+        } else if (operation == 'tan') {
+          _result = tan(radian);
+        }
+        _history.add('$operation($num1°) = ${_result.toStringAsFixed(4)}');
       }
     });
   }
@@ -91,14 +137,26 @@ class _CalculatorAppState extends State<CalculatorApp> {
     });
   }
 
-  void clearAll() {
-    setState(() {
-      _number1Controller.clear();
-      _number2Controller.clear();
-      _result= 0;
-      _history.clear();
-      _status = '';
-    });
+  // void clearAll() {
+  //   setState(() {
+  //     _number1Controller.clear();
+  //     _number2Controller.clear();
+  //     _result= 0;
+  //     _history.clear();
+  //     _status = '';
+  //   });
+  // }
+
+  Widget buildButton(String label, Color color, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+      ),
+    );
   }
 
   @override
@@ -115,6 +173,27 @@ class _CalculatorAppState extends State<CalculatorApp> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            Expanded(
+                child: ListView.builder(
+                    itemCount: _history.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                _history[index],
+                                style: TextStyle(fontSize: 14),
+                              )
+                            ],
+                        ),
+                      );
+                    }
+                )
+            ),
+            SizedBox(height: 20),
             _history.isNotEmpty
             ? Column(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -127,6 +206,10 @@ class _CalculatorAppState extends State<CalculatorApp> {
               '= $_result'
             )
             : SizedBox(),
+            Text(
+              _status,
+              style: TextStyle(fontSize: 10),
+            ),
             TextField(
               controller: _number1Controller,
               decoration: InputDecoration(
@@ -139,94 +222,32 @@ class _CalculatorAppState extends State<CalculatorApp> {
             TextField(
                 controller: _number2Controller,
                 decoration: InputDecoration(
-                    labelText: 'Angka Kedua',
+                    labelText: 'Angka Kedua (kosongkan untuk trig)',
                     contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0)
                 ),
                 keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => calculate('+'),
-                    child: Text('+'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => calculate('-'),
-                    child: Text('-'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => calculate('*'),
-                    child: Text('x'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => calculate('/'),
-                    child: Text(':'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            GridView.count(
+              crossAxisCount: 6,
+              shrinkWrap: true,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
               children: [
-                ElevatedButton(
-                  onPressed: () => calculate('%'),
-                  child: Text('%'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () => calculate('^'),
-                  child: Text('^'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.brown,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: undo,
-                  child: Text('Undo'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: clear,
-                  child: Text('Clear'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                ElevatedButton(
-                    onPressed: clearAll,
-                    child: Text('ClearAll'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink,
-                      foregroundColor: Colors.white,
-                    )
-                )
+                buildButton('+', Colors.blueGrey, () => calculate('+')),
+                buildButton('-', Colors.blueGrey, () => calculate('-')),
+                buildButton('x', Colors.blueGrey, () => calculate('*')),
+                buildButton(':', Colors.blueGrey, () => calculate('/')),
+                buildButton('%', Colors.blueAccent, () => calculate('%')),
+                buildButton('^', Colors.blueAccent, () => calculate('^')),
+                buildButton('% of', Colors.blueAccent, () => calculate('% of')),
+                buildButton('sin', Colors.deepOrange, () => calculate('sin')),
+                buildButton('cos', Colors.deepOrange, () => calculate('cos')),
+                buildButton('tan', Colors.deepOrange, () => calculate('tan')),
+                buildButton('Undo', Colors.teal, undo),
+                buildButton('C', Colors.teal, clear),
               ],
-            )
+            ),
           ],
         ),
       ),
